@@ -2,7 +2,7 @@ import { exec as execCb } from 'node:child_process'
 import { promisify } from 'node:util'
 const exec = promisify(execCb)
 
-const library: Record<string, Record<string, number>> = {}
+let library: Record<string, Record<string, number>> = {}
 
 async function read_loc_per_filetypes(path: string, date: string) {
 	console.error('# ' + date + ': Checking Out...')
@@ -38,10 +38,28 @@ const checkpoints = [
 ]
 
 async function main() {
-	for (const checkpoint of checkpoints) {
-		await read_loc_per_filetypes('../code', checkpoint)
+	try {
+		library = (await import('./data.js')).default
+	} catch (e) {
+		/* empty */
 	}
-	console.log(library)
+	if (!library) {
+		for (const checkpoint of checkpoints) {
+			await read_loc_per_filetypes('../code', checkpoint)
+		}
+	}
+	let header = 'tech'
+	for (const checkpoint of checkpoints) {
+		header += ',' + checkpoint
+	}
+	console.log(header)
+	for (const [tech, loc_per_checkpoint] of Object.entries(library)) {
+		let row = tech
+		for (const checkpoint of checkpoints) {
+			row += ',' + (loc_per_checkpoint[checkpoint] || '')
+		}
+		console.log(row)
+	}
 }
 
 main()
