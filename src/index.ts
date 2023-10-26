@@ -6,13 +6,11 @@ const library: Record<string, Record<string, number>> = {}
 
 async function read_loc_per_filetypes(path: string, date: string) {
 	console.error('# ' + date + ': Checking Out...')
-	const { stderr: checkout_err } = await exec(
+	await exec(
 		`cd ${path} && git -c core.hooksPath=/dev/null checkout \`git rev-list -n 1 --before="${date} 23:59" main\``
 	)
-	if (checkout_err) throw new Error(checkout_err)
 	console.error('# ' + date + ': Cleaning...')
-	const { stderr: clean_err } = await exec(`cd ${path} && git clean -fd`)
-	if (clean_err) throw new Error(clean_err)
+	await exec(`cd ${path} && git clean -fd`)
 	console.error('# ' + date + ': Counting...')
 	const { stdout } = await exec(
 		// eslint-disable-next-line no-useless-escape
