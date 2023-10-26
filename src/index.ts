@@ -1,10 +1,25 @@
+import { addMonths, formatISO } from 'date-fns'
 import { exec as execCb } from 'node:child_process'
 import { promisify } from 'node:util'
 const exec = promisify(execCb)
 
+const USE_DATA_FILE = false
+
+// generate a list of dates we want to checkout
+const FIRST_DATE = '2021-09-01'
+const LAST_DATE = '2023-10-01'
+const checkpoints = [FIRST_DATE]
+let index = 0
+while (checkpoints.at(-1) !== LAST_DATE) {
+	const current = checkpoints[index]
+	checkpoints.push(formatISO(addMonths(new Date(current), 1), { representation: 'date' }))
+	index++
+}
+
+/** holds lines of code per checkpoint per technology */
 let library: Record<string, Record<string, number>> = {}
 
-async function read_loc_per_filetypes(path: string, date: string) {
+async function checkout_and_cloc(path: string, date: string) {
 	console.error('# ' + date + ': Checking Out...')
 	await exec(
 		`cd ${path} && git -c core.hooksPath=/dev/null checkout \`git rev-list -n 1 --before="${date} 23:59" main\``
@@ -25,29 +40,19 @@ async function read_loc_per_filetypes(path: string, date: string) {
 	console.error('# ' + date + ': Success! 🥳')
 }
 
-const checkpoints = [
-	'2021-10-01',
-	'2022-01-01',
-	'2022-04-01',
-	'2022-07-01',
-	'2022-10-01',
-	'2023-01-01',
-	'2023-04-01',
-	'2023-07-01',
-	'2023-10-01',
-]
-
 async function main() {
 	try {
-		library = (await import('./data.js')).default
+		if (USE_DATA_FILE) library = (await import('./data.js')).default
 	} catch (e) {
 		/* empty */
 	}
 	if (!library) {
 		for (const checkpoint of checkpoints) {
-			await read_loc_per_filetypes('../code', checkpoint)
+			await checkout_and_cloc('../code', checkpoint)
 		}
 	}
+
+	// output data as CSV
 	let header = 'tech'
 	for (const checkpoint of checkpoints) {
 		header += ',' + checkpoint
