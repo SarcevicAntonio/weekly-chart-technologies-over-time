@@ -17,7 +17,7 @@ while (checkpoints.at(-1) !== LAST_DATE) {
 }
 
 /** holds lines of code per checkpoint per technology */
-let library: Record<string, Record<string, number>> = {}
+let library: Record<string, Record<string, number>>
 
 async function checkout_and_cloc(path: string, date: string) {
 	console.error('# ' + date + ': Checking Out...')
