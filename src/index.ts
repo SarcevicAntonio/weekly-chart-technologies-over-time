@@ -34,6 +34,7 @@ async function checkout_and_cloc(path: string, date: string) {
 	const output = JSON.parse(stdout)
 	for (const [lang, { code }] of Object.entries(output) as [string, { code: number }][]) {
 		if (lang === 'header' || lang === 'SUM') continue
+		if (!library) library = {}
 		if (!library[lang]) library[lang] = {}
 		library[lang][date] = code
 	}
