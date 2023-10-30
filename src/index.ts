@@ -19,7 +19,7 @@ while (checkpoints.at(-1) !== LAST_DATE) {
 /** holds lines of code per checkpoint per technology */
 let library: Record<string, Record<string, number>>
 
-const ignored_technologies = ['JSON', 'Markdown', 'Text']
+const ignored_technologies = ['JSON', 'Markdown', 'Text', 'CSV']
 
 async function checkout_and_cloc(path: string, date: string) {
 	console.error('# ' + date + ': Checking Out...')
