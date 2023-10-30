@@ -3,10 +3,10 @@ import { exec as execCb } from 'node:child_process'
 import { promisify } from 'node:util'
 const exec = promisify(execCb)
 
-const USE_DATA_FILE = false
+const USE_DATA_FILE = true
 
 // generate a list of dates we want to checkout
-const FIRST_DATE = '2021-09-01'
+const FIRST_DATE = '2021-10-01'
 const LAST_DATE = '2023-10-01'
 const checkpoints = [FIRST_DATE]
 let index = 0
@@ -18,6 +18,8 @@ while (checkpoints.at(-1) !== LAST_DATE) {
 
 /** holds lines of code per checkpoint per technology */
 let library: Record<string, Record<string, number>>
+
+const ignored_technologies = ['JSON', 'Markdown', 'Text']
 
 async function checkout_and_cloc(path: string, date: string) {
 	console.error('# ' + date + ': Checking Out...')
@@ -42,18 +44,14 @@ async function checkout_and_cloc(path: string, date: string) {
 }
 
 async function main() {
-	try {
-		if (USE_DATA_FILE) library = (await import('./data.js')).default
-	} catch (e) {
-		/* empty */
-	}
-	if (!library) {
+	if (USE_DATA_FILE) {
+		library = (await import('./data.js')).default
+	} else {
 		for (const checkpoint of checkpoints) {
 			await checkout_and_cloc('../code', checkpoint)
 		}
+		console.error('\n\n# library:', JSON.stringify(library), '\n\n')
 	}
-
-	console.error('# library:', JSON.stringify(library))
 
 	// output data as CSV
 	let header = 'tech'
@@ -62,11 +60,15 @@ async function main() {
 	}
 	console.log(header)
 	for (const [tech, loc_per_checkpoint] of Object.entries(library)) {
+		if (ignored_technologies.includes(tech)) continue
+		let reached_200_once = false
 		let row = tech
 		for (const checkpoint of checkpoints) {
-			row += ',' + (loc_per_checkpoint[checkpoint] || '')
+			const lines_of_code = loc_per_checkpoint[checkpoint]
+			row += ',' + (lines_of_code || '')
+			if (lines_of_code >= 200) reached_200_once = true
 		}
-		console.log(row)
+		if (reached_200_once) console.log(row)
 	}
 }
 
