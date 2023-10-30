@@ -29,7 +29,7 @@ async function checkout_and_cloc(path: string, date: string) {
 	console.error('# ' + date + ': Counting...')
 	const { stdout } = await exec(
 		// eslint-disable-next-line no-useless-escape
-		`cd ${path} && cloc --vcs=git --not-match-f="(package-lock\.json|\.svelte-kit|build|build\.new|static|dist)" --json .`
+		`cd ${path} && cloc --vcs=git --not-match-f="(package-lock\.json|\.svelte-kit|build|build\.new|static|dist|\.map|\.min\.|polyfills|vendor)" --json .`
 	)
 	const output = JSON.parse(stdout)
 	for (const [lang, { code }] of Object.entries(output) as [string, { code: number }][]) {
@@ -52,6 +52,8 @@ async function main() {
 			await checkout_and_cloc('../code', checkpoint)
 		}
 	}
+
+	console.error('# library:', JSON.stringify(library))
 
 	// output data as CSV
 	let header = 'tech'
