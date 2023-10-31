@@ -3,7 +3,7 @@ import { exec as execCb } from 'node:child_process'
 import { promisify } from 'node:util'
 const exec = promisify(execCb)
 
-const USE_DATA_FILE = true
+const USE_DATA_FILE = false
 
 // generate a list of dates we want to checkout
 const FIRST_DATE = '2021-10-01'
@@ -19,7 +19,7 @@ while (checkpoints.at(-1) !== LAST_DATE) {
 /** holds lines of code per checkpoint per technology */
 let library: Record<string, Record<string, number>>
 
-const ignored_technologies = ['JSON', 'Markdown', 'Text', 'CSV']
+const ignored_technologies = ['JSON', 'Markdown', 'Text', 'CSV', 'YAML']
 
 async function checkout_and_cloc(path: string, date: string) {
 	console.error('# ' + date + ': Checking Out...')
@@ -31,7 +31,7 @@ async function checkout_and_cloc(path: string, date: string) {
 	console.error('# ' + date + ': Counting...')
 	const { stdout } = await exec(
 		// eslint-disable-next-line no-useless-escape
-		`cd ${path} && cloc --vcs=git --not-match-f="(package-lock\.json|\.svelte-kit|build|build\.new|static|dist|\.map|\.min\.|polyfills|vendor)" --json .`
+		`cd ${path} && cloc ./ --json --exclude-dir=node_modules,dist,static,test,tests,build,locale,yarn.lock,package.json,package-lock.json,docker,locales,docs,.storybook,icons,polyfills,fonts,effective_tlds.txt,reports,spec,wordlists,chartview.css,chartview.js,paypal-invoices.json,main.css,articles.json,blinder.js,controls.css,admin,readme.md,README.md,.svelte-kit,build.new,storybook-static,mapshaper`
 	)
 	const output = JSON.parse(stdout)
 	for (const [lang, { code }] of Object.entries(output) as [string, { code: number }][]) {
@@ -50,7 +50,7 @@ async function main() {
 		for (const checkpoint of checkpoints) {
 			await checkout_and_cloc('../code', checkpoint)
 		}
-		console.error('\n\n# library:', JSON.stringify(library), '\n\n')
+		console.error('\n\n-----------------\n\n', JSON.stringify(library), '\n\n-----------------\n\n')
 	}
 
 	// output data as CSV
